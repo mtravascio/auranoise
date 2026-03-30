@@ -199,6 +199,12 @@ class AudioController extends GetxController {
   }
 
   int countActiveSoundsInPreset(Preset preset) {
+    // For the default preset, use current sounds state instead of saved data
+    if (preset.id == 'default') {
+      return sounds.where((s) => s.volume > 0 && s.playing).length;
+    }
+
+    // For other presets, count from saved data
     int count = 0;
     preset.volumes.forEach((soundName, volume) {
       final isMuted = preset.muted[soundName] ?? false;

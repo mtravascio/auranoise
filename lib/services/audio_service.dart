@@ -74,6 +74,14 @@ class AudioService extends ChangeNotifier {
       await _settings.savePresets(_presets);
     }
 
+    // Ensure active preset ID is valid, fallback to default if not
+    final presetExists = _presets.any((p) => p.id == _activePresetId);
+    if (!presetExists) {
+      debugPrint('🎵 Active preset $_activePresetId not found, falling back to default');
+      _activePresetId = 'default';
+      await _settings.setActivePreset('default');
+    }
+
     // Clear any existing sounds first (safety)
     _sounds.clear();
 
@@ -275,7 +283,15 @@ class AudioService extends ChangeNotifier {
   }
 
   Future<void> _saveCurrentState() async {
-    await _settings.saveSoundState(_activePresetId, _sounds);
+    // Only save if there are active sounds, or if it's not the default preset
+    // This prevents empty default preset from overwriting other presets' data
+    final hasActiveSounds = _sounds.any((s) => s.volume > 0 || s.playing);
+    if (hasActiveSounds || _activePresetId != 'default') {
+      await _settings.saveSoundState(_activePresetId, _sounds);
+      debugPrint('🎵 Saved state for preset: $_activePresetId');
+    } else {
+      debugPrint('🎵 Skipped saving empty default preset');
+    }
   }
 
   /// Save current state (called when app goes to background)
@@ -299,6 +315,15 @@ class AudioService extends ChangeNotifier {
   Future<void> setActivePreset(String presetId) async {
     // Save current state before switching
     await _saveCurrentState();
+
+    // If switching FROM default preset and it has sounds, preserve its state
+    if (_activePresetId == 'default') {
+      final defaultHasSounds = _sounds.any((s) => s.volume > 0 || s.playing);
+      if (defaultHasSounds) {
+        await _settings.saveSoundState('default', _sounds);
+        debugPrint('🎵 Preserved default preset state before switching');
+      }
+    }
 
     _activePresetId = presetId;
     await _settings.setActivePreset(presetId);
@@ -324,6 +349,9 @@ class AudioService extends ChangeNotifier {
   }
 
   Future<void> addPreset(String name) async {
+    // First save current preset state before creating new one
+    await _saveCurrentState();
+
     final preset = Preset(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
@@ -341,7 +369,8 @@ class AudioService extends ChangeNotifier {
     // Save the sound state for this preset so volumes are persisted
     await _settings.saveSoundState(preset.id, _sounds);
 
-    await setActivePreset(preset.id);
+    // DO NOT automatically activate the new preset - let user decide
+    // Just notify that presets list changed
     notifyListeners();
   }
 

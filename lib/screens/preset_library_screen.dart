@@ -191,7 +191,7 @@ class PresetLibraryScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(AuraRadius.full),
                           ),
                           child: Text(
-                            isPlaying ? 'PLAYING' : 'ACTIVE',
+                            isPlaying ? 'NOW PLAYING' : 'SELECTED',
                             style: AuraTypography.labelSmall.copyWith(
                               color: AuraColors.primary,
                               fontWeight: FontWeight.w700,
@@ -276,8 +276,18 @@ class PresetLibraryScreen extends StatelessWidget {
         controller.setActivePreset(preset.id);
       }
     } else {
-      // Switch to this preset and play
+      // Switch to this preset - save current first, then load new
+      final prevPresetName = controller.activePreset?.name ?? 'Previous';
       controller.setActivePreset(preset.id);
+      // Show feedback to user
+      Get.snackbar(
+        'Preset Switched',
+        'Saved "$prevPresetName" and loaded "${preset.name}"',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AuraColors.surfaceContainerHighest,
+        colorText: AuraColors.onSurface,
+        duration: const Duration(seconds: 2),
+      );
     }
   }
 
