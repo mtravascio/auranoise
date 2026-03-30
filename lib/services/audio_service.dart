@@ -19,6 +19,10 @@ class AudioService extends ChangeNotifier {
   bool _isPreloading = false;
   int _preloadProgress = 0;
 
+  // Background playback state
+  bool _wasPlayingBeforeBackground = false;
+  bool _isInBackground = false;
+
   List<Sound> get sounds => List.unmodifiable(_sounds);
   double get globalVolume => _globalVolume;
   // Playing state is determined by whether any sound is actively playing
@@ -48,6 +52,12 @@ class AudioService extends ChangeNotifier {
   }
 
   Future<void> init() async {
+    // Prevent double initialization
+    if (_sounds.isNotEmpty) {
+      debugPrint('🎵 AudioService: Already initialized, skipping...');
+      return;
+    }
+
     debugPrint('🎵 AudioService: Starting initialization...');
 
     // Load settings
@@ -63,6 +73,9 @@ class AudioService extends ChangeNotifier {
       ];
       await _settings.savePresets(_presets);
     }
+
+    // Clear any existing sounds first (safety)
+    _sounds.clear();
 
     // Create built-in sounds
     final builtinSounds = SoundGroups.createDefaultSounds();
@@ -93,34 +106,46 @@ class AudioService extends ChangeNotifier {
     _preloadProgress = 0;
     debugPrint('🎵 AudioService: Starting background preload...');
 
-    // First, initialize all sounds
-    for (final sound in _sounds) {
+    // First, initialize all sounds (create a copy to avoid concurrent modification)
+    final soundsToInit = List<Sound>.from(_sounds);
+    for (final sound in soundsToInit) {
       if (!sound.initialized) {
         try {
           await sound.init();
           _preloadProgress++;
-          notifyListeners();
         } catch (e) {
           debugPrint('✗ Failed to preload ${sound.name}: $e');
         }
       }
     }
+    notifyListeners();
 
-    // Then, start playing active sounds
-    final activeSounds = _sounds.where((s) => s.playing && s.volume > 0).toList();
-    debugPrint('🎵 Active sounds to resume: ${activeSounds.length}');
+    // Then, start playing active sounds (unless start_paused is enabled)
+    final startPaused = _settings.getStartPaused();
+    if (!startPaused) {
+      final activeSounds = _sounds.where((s) => s.playing && s.volume > 0).toList();
+      debugPrint('🎵 Active sounds to resume: ${activeSounds.length}');
 
-    for (final sound in activeSounds) {
-      try {
-        if (sound.initialized) {
-          await sound.player.setVolume(sound.volume * _globalVolume);
-          await sound.player.play();
-          debugPrint('🎵 Resumed playing: ${sound.name} (volume: ${sound.volume})');
-          // Small delay to prevent audio buffer issues on Android
-          await Future.delayed(const Duration(milliseconds: 50));
+      for (final sound in activeSounds) {
+        try {
+          if (sound.initialized) {
+            await sound.player.setVolume(sound.volume * _globalVolume);
+            await sound.player.play();
+            debugPrint('🎵 Resumed playing: ${sound.name} (volume: ${sound.volume})');
+            // Small delay to prevent audio buffer issues on Android
+            await Future.delayed(const Duration(milliseconds: 50));
+          }
+        } catch (e) {
+          debugPrint('✗ Failed to resume ${sound.name}: $e');
         }
-      } catch (e) {
-        debugPrint('✗ Failed to resume ${sound.name}: $e');
+      }
+    } else {
+      debugPrint('🎵 Start paused is enabled - not resuming sounds');
+      // Reset playing state to false for all sounds
+      for (final sound in _sounds) {
+        if (sound.playing) {
+          sound.playing = false;
+        }
       }
     }
 
@@ -312,6 +337,10 @@ class AudioService extends ChangeNotifier {
 
     _presets.add(preset);
     await _settings.addPreset(preset);
+
+    // Save the sound state for this preset so volumes are persisted
+    await _settings.saveSoundState(preset.id, _sounds);
+
     await setActivePreset(preset.id);
     notifyListeners();
   }
@@ -391,6 +420,38 @@ class AudioService extends ChangeNotifier {
 
   bool get hideInactive {
     return activePreset?.hideInactive ?? false;
+  }
+
+  /// Called when app goes to background
+  Future<void> onAppBackground() async {
+    _isInBackground = true;
+    final backgroundPlayback = _settings.getBackgroundPlayback();
+
+    debugPrint('🎵 App going to background - backgroundPlayback: $backgroundPlayback');
+
+    if (!backgroundPlayback && playing) {
+      // Save that we were playing before going to background
+      _wasPlayingBeforeBackground = true;
+      // Stop all sounds
+      await stopAll();
+      debugPrint('🎵 Stopped sounds (backgroundPlayback is OFF)');
+    }
+  }
+
+  /// Called when app returns to foreground
+  Future<void> onAppForeground() async {
+    _isInBackground = false;
+    final backgroundPlayback = _settings.getBackgroundPlayback();
+
+    debugPrint('🎵 App returning to foreground - wasPlaying: $_wasPlayingBeforeBackground, backgroundPlayback: $backgroundPlayback');
+
+    // If background playback was OFF and we were playing before, resume sounds
+    if (!backgroundPlayback && _wasPlayingBeforeBackground) {
+      _wasPlayingBeforeBackground = false;
+      // Resume the active preset
+      await _applyPreset(_activePresetId);
+      debugPrint('🎵 Resumed sounds (returned from background)');
+    }
   }
 
   @override

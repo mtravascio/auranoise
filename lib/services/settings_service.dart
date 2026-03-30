@@ -101,10 +101,19 @@ class SettingsService {
   }
 
   // Start paused
-  bool get startPaused => _prefs?.getBool('start_paused') ?? false;
+  bool getStartPaused() => _prefs?.getBool('start_paused') ?? false;
   Future<void> setStartPaused(bool value) async {
     await _prefs?.setBool('start_paused', value);
   }
+
+  // Wake Lock (keep screen on)
+  bool getWakeLock() => _prefs?.getBool('wake_lock') ?? false;
+  Future<void> setWakeLock(bool value) async {
+    await _prefs?.setBool('wake_lock', value);
+  }
+
+  // Background playback getter
+  bool getBackgroundPlayback() => _prefs?.getBool('background_playback') ?? true;
 
   // Hide inactive
   bool getPresetHideInactive(String presetId) {

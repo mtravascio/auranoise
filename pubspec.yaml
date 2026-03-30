@@ -43,7 +43,10 @@ dependencies:
   media_kit_libs_linux: any
   media_kit_libs_windows_audio: any
   flutter_svg: ^2.0.10
- 
+  google_fonts: ^6.2.1
+  get: ^4.6.6
+  package_info_plus: ^8.0.0
+  wakelock_plus: ^1.2.0
 
 dev_dependencies:
   flutter_test:
