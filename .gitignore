@@ -1,0 +1,119 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+*.tmp
+*.temp
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code (uncomment if you want to ignore settings)
+# .vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+.packages
+*.dart_tool
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/key.properties
+/android/local.properties
+/android/.gradle/
+/android/captures/
+/android/gradlew
+/android/gradlew.bat
+/android/*.log
+/android/*.keystore
+/android/*.jks
+
+# iOS/XCode related
+/ios/*.mode1v3
+/ios/*.mode2v3
+/ios/*.moved-aside
+/ios/*.pbxuser
+/ios/*.perspectivev3
+/ios/**/*sync/
+/ios/**/.sconsign.dblite
+/ios/**/.tags*
+/ios/**/*/.vagrant
+/ios/**/DerivedData/
+/ios/**/Icon?
+/ios/**/Pods/
+/ios/**/profile
+/ios/**/xcuserdata
+/ios/.generated/
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/ephemeral/
+/ios/Flutter/flutter_assets/
+/ios/ServiceDefinitions.json
+/ios/Runner/GeneratedPluginRegistrant.*
+/ios/.symlinks/
+/ios/default.mode1v3
+/ios/default.mode2v3
+/ios/default.pbxuser
+/ios/default.perspectivev3
+
+# macOS related
+/macos/Flutter/ephemeral/
+/macos/Pods/
+/macos/*.xcodeproj/xcuserdata/
+
+# Web related
+/web/.dart_tool/
+/web/packages/
+
+# Linux related
+/linux/flutter/ephemeral/
+/linux/build/
+
+# Windows related
+/windows/flutter/ephemeral/
+/windows/build/
+
+# Claude Code specific
+.claude/
+memory/
+
+# Test related
+/test/failures/
+
+# Environment files (if any)
+.env
+.env.local
+.env.*.local
+
+# Firebase/Google Services (if added later)
+google-services.json
+GoogleService-Info.plist
