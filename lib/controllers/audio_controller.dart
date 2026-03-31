@@ -22,6 +22,7 @@ class AudioController extends GetxController {
   final RxDouble globalVolume = 1.0.obs;
   final RxBool isPlaying = false.obs;
   final RxBool isLoading = true.obs;
+  final RxBool isSwitching = false.obs;
   final RxString error = ''.obs;
 
   // Computed
@@ -86,6 +87,7 @@ class AudioController extends GetxController {
     activePresetId.value = _audioService.activePresetId;
     globalVolume.value = _audioService.globalVolume;
     isPlaying.value = _audioService.playing;
+    isSwitching.value = _audioService.isSwitchingPreset;
 
     // Manage wake lock based on playing state
     _manageWakeLock();
@@ -141,8 +143,10 @@ class AudioController extends GetxController {
   }
 
   Future<void> setActivePreset(String presetId) async {
+    if (isSwitching.value) return;
     await _audioService.setActivePreset(presetId);
     activePresetId.value = _audioService.activePresetId;
+    isSwitching.value = _audioService.isSwitchingPreset;
     sounds.refresh();
     isPlaying.value = _audioService.playing;
   }

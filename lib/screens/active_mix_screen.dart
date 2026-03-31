@@ -172,10 +172,15 @@ class ActiveMixScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          sound.title,
-                          style: AuraTypography.titleSmall,
+                        Expanded(
+                          child: Text(
+                            sound.title,
+                            style: AuraTypography.titleSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           sound.category,
                           style: AuraTypography.labelSmall.copyWith(
@@ -261,82 +266,156 @@ class ActiveMixScreen extends StatelessWidget {
             ],
           ),
         ),
-        child: Obx(() => GlassPanel(
+        child: GlassPanel(
           padding: const EdgeInsets.all(AuraSpacing.lg),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  // Master label
-                  SizedBox(
-                    width: 120,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Global Master',
-                          style: AuraTypography.labelSmall.copyWith(
-                            color: AuraColors.onSurfaceVariant,
-                            letterSpacing: 0.2,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 450;
+
+              return Obx(() {
+                if (isNarrow) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          // Master label
+                          SizedBox(
+                            width: 80,
+                            child: Text(
+                              'Master',
+                              style: AuraTypography.titleSmall,
+                            ),
+                          ),
+                          // Volume slider
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.volume_down,
+                                  size: 20,
+                                  color: AuraColors.onSurfaceVariant,
+                                ),
+                                Expanded(
+                                  child: Slider(
+                                    value: controller.globalVolume.value,
+                                    onChanged: (value) => controller.setGlobalVolume(value),
+                                    activeColor: AuraColors.primary,
+                                    inactiveColor: AuraColors.surfaceVariant.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.volume_up,
+                                  size: 20,
+                                  color: AuraColors.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AuraSpacing.md),
+                      // Save preset button (Full width on mobile)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            final activePreset = controller.activePreset;
+                            Get.dialog(PresetDialog(
+                              audioService: controller.audioService,
+                              initialName: activePreset?.name ?? 'Default',
+                              presetId: activePreset?.id ?? 'default',
+                            ));
+                          },
+                          icon: const Icon(Icons.save),
+                          label: const Text('SAVE PRESET'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Mix Output',
-                          style: AuraTypography.titleSmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Volume slider
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.volume_down,
-                          color: AuraColors.onSurfaceVariant,
-                        ),
-                        Expanded(
-                          child: Slider(
-                            value: controller.globalVolume.value,
-                            onChanged: (value) => controller.setGlobalVolume(value),
-                            activeColor: AuraColors.primary,
-                            inactiveColor: AuraColors.surfaceVariant.withValues(alpha: 0.4),
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    // Master label
+                    SizedBox(
+                      width: 120,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Global Master',
+                            style: AuraTypography.labelSmall.copyWith(
+                              color: AuraColors.onSurfaceVariant,
+                              letterSpacing: 0.2,
+                            ),
                           ),
-                        ),
-                        Icon(
-                          Icons.volume_up,
-                          color: AuraColors.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AuraSpacing.md),
-                  // Divider
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: AuraColors.outlineVariant.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(width: AuraSpacing.md),
-                  // Save preset button
-                  ElevatedButton(
-                    onPressed: () {
-                      Get.dialog(PresetDialog(audioService: controller.audioService));
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+                          const SizedBox(height: 4),
+                          Text(
+                            'Mix Output',
+                            style: AuraTypography.titleSmall,
+                          ),
+                        ],
                       ),
                     ),
-                    child: const Text('SAVE PRESET'),
-                  ),
-                ],
-              ),
-            ],
+                    // Volume slider
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.volume_down,
+                            color: AuraColors.onSurfaceVariant,
+                          ),
+                          Expanded(
+                            child: Slider(
+                              value: controller.globalVolume.value,
+                              onChanged: (value) => controller.setGlobalVolume(value),
+                              activeColor: AuraColors.primary,
+                              inactiveColor: AuraColors.surfaceVariant.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          Icon(
+                            Icons.volume_up,
+                            color: AuraColors.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AuraSpacing.md),
+                    // Divider
+                    Container(
+                      width: 1,
+                      height: 40,
+                      color: AuraColors.outlineVariant.withValues(alpha: 0.3),
+                    ),
+                    const SizedBox(width: AuraSpacing.md),
+                    // Save preset button
+                    ElevatedButton(
+                      onPressed: () {
+                        final activePreset = controller.activePreset;
+                        Get.dialog(PresetDialog(
+                          audioService: controller.audioService,
+                          initialName: activePreset?.name ?? 'Default',
+                          presetId: activePreset?.id ?? 'default',
+                        ));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: const Text('SAVE PRESET'),
+                    ),
+                  ],
+                );
+              });
+            },
           ),
-        )),
+        ),
       ),
     );
   }

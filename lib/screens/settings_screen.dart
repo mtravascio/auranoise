@@ -242,15 +242,14 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   // Quick select buttons
                   const SizedBox(height: AuraSpacing.md),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: AuraSpacing.sm,
+                    runSpacing: AuraSpacing.sm,
                     children: [
                       _buildQuickTimeButton(timerController, 15, '15m'),
-                      const SizedBox(width: AuraSpacing.sm),
                       _buildQuickTimeButton(timerController, 30, '30m'),
-                      const SizedBox(width: AuraSpacing.sm),
                       _buildQuickTimeButton(timerController, 45, '45m'),
-                      const SizedBox(width: AuraSpacing.sm),
                       _buildQuickTimeButton(timerController, 60, '1h'),
                     ],
                   ),

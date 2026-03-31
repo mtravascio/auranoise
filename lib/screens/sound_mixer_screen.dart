@@ -58,10 +58,14 @@ class SoundMixerScreen extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                controller.activePreset?.name ?? 'Default',
-                style: AuraTypography.titleSmall.copyWith(
-                  color: AuraColors.primary,
+              Flexible(
+                child: Text(
+                  controller.activePreset?.name ?? 'Default',
+                  style: AuraTypography.titleSmall.copyWith(
+                    color: AuraColors.primary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
@@ -77,19 +81,19 @@ class SoundMixerScreen extends StatelessWidget {
       actions: [
         Obx(() => IconButton(
           icon: const Icon(Icons.chevron_left),
-          onPressed: controller.canPrevPreset
+          onPressed: controller.canPrevPreset && !controller.isSwitching.value
               ? () => controller.prevPreset()
               : null,
-          color: controller.canPrevPreset
+          color: controller.canPrevPreset && !controller.isSwitching.value
               ? AuraColors.primary
               : AuraColors.onSurfaceVariant.withValues(alpha: 0.4),
         )),
         Obx(() => IconButton(
           icon: const Icon(Icons.chevron_right),
-          onPressed: controller.canNextPreset
+          onPressed: controller.canNextPreset && !controller.isSwitching.value
               ? () => controller.nextPreset()
               : null,
-          color: controller.canNextPreset
+          color: controller.canNextPreset && !controller.isSwitching.value
               ? AuraColors.primary
               : AuraColors.onSurfaceVariant.withValues(alpha: 0.4),
         )),
@@ -224,6 +228,9 @@ class SoundMixerScreen extends StatelessWidget {
                             isPlaying ? FontWeight.w600 : FontWeight.w500,
                         letterSpacing: 0.05,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -287,6 +294,8 @@ class SoundMixerScreen extends StatelessWidget {
                       style: AuraTypography.bodyMedium.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       '${controller.activeSoundsCount} Active Layers',
@@ -429,8 +438,13 @@ class SoundMixerScreen extends StatelessWidget {
                     color: AuraColors.primary),
                 title: Text('Save as Preset', style: AuraTypography.bodyMedium),
                 onTap: () {
+                  final activePreset = controller.activePreset;
                   Get.back();
-                  Get.dialog(PresetDialog(audioService: controller.audioService));
+                  Get.dialog(PresetDialog(
+                    audioService: controller.audioService,
+                    initialName: activePreset?.name ?? 'Default',
+                    presetId: activePreset?.id ?? 'default',
+                  ));
                 },
               ),
               ListTile(

@@ -5,10 +5,14 @@ import '../services/audio_service.dart';
 
 class PresetDialog extends StatefulWidget {
   final AudioService audioService;
+  final String? initialName;
+  final String? presetId;
 
   const PresetDialog({
     super.key,
     required this.audioService,
+    this.initialName,
+    this.presetId,
   });
 
   @override
@@ -16,7 +20,13 @@ class PresetDialog extends StatefulWidget {
 }
 
 class _PresetDialogState extends State<PresetDialog> {
-  final _textController = TextEditingController();
+  late final TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(text: widget.initialName);
+  }
 
   @override
   void dispose() {
@@ -26,8 +36,10 @@ class _PresetDialogState extends State<PresetDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isNew = widget.presetId == null || widget.presetId == 'default';
+
     return AlertDialog(
-      title: const Text('New Preset'),
+      title: const Text('Current Preset'),
       content: TextField(
         controller: _textController,
         decoration: const InputDecoration(
@@ -42,14 +54,24 @@ class _PresetDialogState extends State<PresetDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: () {
+          onPressed: () async {
             final name = _textController.text.trim();
             if (name.isNotEmpty) {
-              widget.audioService.addPreset(name);
-              Navigator.of(context).pop();
+              if (isNew) {
+                // Create a new preset from current state
+                await widget.audioService.addPreset(name);
+              } else {
+                // Update existing preset
+                if (name != widget.initialName) {
+                  await widget.audioService.renamePreset(widget.presetId!, name);
+                }
+                // Save volumes to current preset
+                await widget.audioService.saveState();
+              }
+              if (mounted) Navigator.of(context).pop();
             }
           },
-          child: const Text('Create'),
+          child: Text(isNew ? 'Create' : 'Save'),
         ),
       ],
     );
